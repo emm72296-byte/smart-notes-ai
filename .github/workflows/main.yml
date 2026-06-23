@@ -12,13 +12,16 @@ jobs:
           java-version: '17'
           distribution: 'zulu'
 
-      - name: Initialize Gradle Wrapper if missing
+      - name: Initialize Gradle Wrapper and Create Debug Keystore
         run: |
           if [ ! -f "gradlew" ]; then
-            npm install -g cordova # أداة مساعدة لتوليد ملفات البناء إذا كانت ناقصة
             gradle wrapper
           fi
           chmod +x gradlew
+          
+          # أمر سحري لصناعة ملف الختم الأمني تلقائياً في المكان الذي يبحث عنه أندرويد
+          mkdir -p ~/.android
+          keytool -genkey -v -keystore ~/.android/debug.keystore -storepass android -alias androiddebugkey -keypass android -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=Android Debug,O=Android,C=US"
 
       - name: Build with Gradle
         run: ./gradlew assembleDebug
@@ -28,3 +31,4 @@ jobs:
         with:
           name: app-debug
           path: "**/build/outputs/apk/debug/*.apk"
+
