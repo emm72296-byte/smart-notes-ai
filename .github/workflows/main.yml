@@ -12,23 +12,23 @@ jobs:
           java-version: '17'
           distribution: 'zulu'
 
-      - name: Initialize Gradle Wrapper and Create Debug Keystore
+      - name: Find Gradle and Build APK
         run: |
-          if [ ! -f "gradlew" ]; then
+          # البحث عن المجلد الذي يحتوي على ملفات أندرويد والدخول إليه تلقائياً
+          GRADLE_DIR=$(find . -name "gradlew" -exec dirname {} \;)
+          if [ -z "$GRADLE_DIR" ]; then
+            echo "Gradlew not found, generating one..."
             gradle wrapper
+            chmod +x gradlew
+            ./gradlew assembleDebug
+          else
+            cd $GRADLE_DIR
+            chmod +x gradlew
+            ./gradlew assembleDebug
           fi
-          chmod +x gradlew
-          
-          # أمر سحري لصناعة ملف الختم الأمني تلقائياً في المكان الذي يبحث عنه أندرويد
-          mkdir -p ~/.android
-          keytool -genkey -v -keystore ~/.android/debug.keystore -storepass android -alias androiddebugkey -keypass android -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=Android Debug,O=Android,C=US"
-
-      - name: Build with Gradle
-        run: ./gradlew assembleDebug
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: app-debug
+          name: Smart-Notes-AI-App
           path: "**/build/outputs/apk/debug/*.apk"
-
